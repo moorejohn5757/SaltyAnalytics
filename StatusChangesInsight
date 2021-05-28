@@ -1,0 +1,93 @@
+#Required packages
+require(tidyverse)
+require(lubridate)
+
+#Reading Dataset
+SaltyAnalytics <-  read_excel("C:/Users/moore/Downloads/Salty Analytics Intership Sample Dataset.xlsx")
+str(SaltyAnalytics)
+
+#Converting dates to date type
+SaltyAnalytics$created_at <- as.Date(SaltyAnalytics$created_at)
+
+#Checking total number of NA's in dataset
+sum(is.na(SaltyAnalytics))
+
+#Number of distinct dealerships
+SaltyAnalytics %>% summarize(n_distinct(dealership_id))
+
+#Number of distinct status changes 
+SaltyAnalytics %>% summarize(n_distinct(new_status_str))
+
+#Number of distinct prior status
+SaltyAnalytics %>% summarize(n_distinct(prior_status_str))
+
+#Number of distinct entry methods 
+SaltyAnalytics %>% summarize(n_distinct(entry_method))
+
+#Number of distinct user ID's
+SaltyAnalytics %>% 
+  summarize(
+    n_distinct(user_id)
+  )
+
+#Most frequented status changes 
+SaltyAnalytics %>%
+  count(new_status_str) %>%
+  arrange(desc(n))
+
+#Most frequent prior status 
+SaltyAnalytics %>% 
+  count(prior_status_str) %>%
+  arrange(desc(n))
+
+#Seeing the number of times the different entry methods were used 
+SaltyAnalytics %>% 
+  group_by(entry_method) %>%
+  summarize(
+    N = n(),
+  )
+
+#Checking busiest days 
+BusiestDays <- SaltyAnalytics %>% 
+  group_by(created_at) %>%
+  summarize(N = n()) %>%
+  arrange(desc(N))
+
+#Breaking off top dealerships
+top_dealerships <- SaltyAnalytics %>%
+  group_by(dealership_id) %>%
+  summarize(N = n()) %>%
+  arrange(desc(N))
+
+#Changing N to status changes
+top_dealerships <- top_dealerships %>% rename(Dealership_ID = dealership_id, Status_Changes = N)
+
+#Seperating out dashboard and QR Code entries  
+Dashboard <- SaltyAnalytics %>% filter(entry_method == "Dashboard")
+QRCode <- SaltyAnalytics %>% filter(entry_method == "QR Code")
+
+#Seeing how dealership ID infuences entry method 
+SaltyAnalytics %>% 
+  summarize(
+    n_distinct(dealership_id)
+  )
+
+Dashboard %>% 
+  summarize(
+    n_distinct(dealership_id)
+  )
+
+QRCode %>% 
+  summarize(
+    n_distinct(dealership_id)
+  )
+
+#Graphing Status Changes over Time
+BusiestDays %>% ggplot(aes(x = created_at, y = N)) +
+  geom_point(size = 1.75, color = "Blue") +
+  geom_line(color = "Red", size = 1.10) +
+  ggtitle("Total Customer Status Changes Over Time") +
+  labs(x = "Date", y = "Status Changes") +
+  theme_bw()
+
+
